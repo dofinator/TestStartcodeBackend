@@ -5,24 +5,48 @@
  */
 package dto;
 
+import java.util.List;
+
 /**
  *
  * @author lukas
  */
 public class CombinedDTO {
+
     private String peopleName;
     private String planetName;
     private String speciesName;
     private String starshipName;
     private String vehicleName;
+    private int peopleCount;
 
-    public CombinedDTO(PeopleDTO people, PlanetDTO planet, SpeciesDTO species, StarshipDTO starship, VehicleDTO vehicle) {
+    public CombinedDTO(PeopleDTO people, PlanetDTO planet, SpeciesDTO species, StarshipDTO starship, VehicleDTO vehicle, PeopleCountDTO peopleCount) {
         this.peopleName = people.getName();
         this.planetName = planet.getName();
         this.speciesName = species.getName();
         this.starshipName = starship.getName();
         this.vehicleName = vehicle.getName();
+        this.peopleCount = peopleCount.getCount();
+       
     }
+    
+    public String getStarshipName() {
+        return starshipName;
+    }
+
+    public void setStarshipName(String starshipName) {
+        this.starshipName = starshipName;
+    }
+
+    public int getPeopleCount() {
+        return peopleCount;
+    }
+
+    public void setPeopleCount(int peopleCount) {
+        this.peopleCount = peopleCount;
+    }
+
+    
 
     public String getPeopleName() {
         return peopleName;
@@ -63,7 +87,5 @@ public class CombinedDTO {
     public void setVehicleName(String vehicleName) {
         this.vehicleName = vehicleName;
     }
-    
-    
-    
+
 }
