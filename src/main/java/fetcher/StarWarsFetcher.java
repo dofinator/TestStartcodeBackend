@@ -2,12 +2,15 @@ package fetcher;
 
 import com.google.gson.Gson;
 import dto.CombinedDTO;
+import dto.PeopleCountDTO;
 import dto.PeopleDTO;
+import dto.PeoplesDTO;
 import dto.PlanetDTO;
 import dto.SpeciesDTO;
 import dto.StarshipDTO;
 import dto.VehicleDTO;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -17,13 +20,24 @@ import java.util.concurrent.TimeoutException;
 import utils.HttpUtils;
 
 public class StarWarsFetcher {
+
     private static final String PEOPLE_URL = "https://swapi.dev/api/people/1/";
     private static final String PLANET_URL = "https://swapi.dev/api/planets/3/";
     private static final String SPECIES_URL = "https://swapi.dev/api/species/9/";
     private static final String STARSHIP_URL = "https://swapi.dev/api/starships/3/";
     private static final String VEHICLE_URL = "https://swapi.dev/api/vehicles/4/";
+    private static final String PEOPLES_URL = "https://swapi.dev/api/people/";
 
     public static String responseFromExternalServersParrallel(ExecutorService threadPool, Gson gson) throws InterruptedException, ExecutionException, TimeoutException {
+
+        Callable<PeoplesDTO> peoplesTask = new Callable<PeoplesDTO>() {
+            @Override
+            public PeoplesDTO call() throws Exception {
+                String peoples = HttpUtils.fetchData(PEOPLES_URL);
+                PeoplesDTO peoplesDTO = gson.fromJson(peoples, PeoplesDTO.class);
+                return peoplesDTO;
+            }
+        };
 
         Callable<PeopleDTO> peopleTask = new Callable<PeopleDTO>() {
             @Override
@@ -74,21 +88,36 @@ public class StarWarsFetcher {
                 return vehicleDTO;
             }
         };
+
+        Callable<PeopleCountDTO> countTask = new Callable<PeopleCountDTO>() {
+            @Override
+            public PeopleCountDTO call() throws Exception {
+                String count = HttpUtils.fetchData(PEOPLES_URL);
+                PeopleCountDTO peopleCountDTO = gson.fromJson(count, PeopleCountDTO.class);
+
+                return peopleCountDTO;
+            }
+        };
+
+        Future<PeopleCountDTO> futureCount = threadPool.submit(countTask);
+        Future<PeoplesDTO> futurePeoples = threadPool.submit(peoplesTask);
         Future<PeopleDTO> futurePeople = threadPool.submit(peopleTask);
         Future<PlanetDTO> futurePlanet = threadPool.submit(planetTask);
         Future<SpeciesDTO> futureSpecies = threadPool.submit(speciesTask);
         Future<StarshipDTO> futureStarship = threadPool.submit(starshipTask);
         Future<VehicleDTO> futureVehicle = threadPool.submit(vehicleTask);
 
+        PeopleCountDTO pCount = futureCount.get(2, TimeUnit.SECONDS);
+        PeoplesDTO peoples = futurePeoples.get(2, TimeUnit.SECONDS);
         PeopleDTO people = futurePeople.get(2, TimeUnit.SECONDS);
         PlanetDTO planet = futurePlanet.get(2, TimeUnit.SECONDS);
         SpeciesDTO species = futureSpecies.get(2, TimeUnit.SECONDS);
         StarshipDTO starship = futureStarship.get(2, TimeUnit.SECONDS);
         VehicleDTO vehicle = futureVehicle.get(2, TimeUnit.SECONDS);
 
-        CombinedDTO combinedDTO = new CombinedDTO(people, planet, species, starship, vehicle);
+        CombinedDTO combinedDTO = new CombinedDTO(people, planet, species, starship, vehicle, pCount);
         String combinedJSON = gson.toJson(combinedDTO);
-        
+
         return combinedJSON;
     }
 
